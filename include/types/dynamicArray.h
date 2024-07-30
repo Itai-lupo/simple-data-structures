@@ -11,7 +11,7 @@
 
 #pragma once
 
-#include "memoryPool/types/memoryAllocator.h"
+#include "types/memoryAllocator.h"
 #include "types/err_t.h"
 
 #define IS_VALID_DARRAY(arr)                                                                                           \

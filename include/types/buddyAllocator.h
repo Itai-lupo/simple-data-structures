@@ -16,7 +16,7 @@
 // #include <cstddef>
 #include <unistd.h>
 
-#include "memoryPool/types/memoryMapInfo.h"
+#include "types/memoryMapInfo.h"
 
 #include "types/dynamicArray.h"
 
