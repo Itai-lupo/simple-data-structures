@@ -36,16 +36,17 @@
  *
  * @var buddyAllocator::memorySource the info of the address range manged by the allocator.
  * @see memoryMapInfo
- * 
+ *
  * @var buddyAllocator::poolSizeExponent
  *		 the exponent of the wanted max pool size(2^x)
- * @var buddyAllocator::smallestAllocationSizeExponent 
+ * @var buddyAllocator::smallestAllocationSizeExponent
  *			the exponent of the smallest wanted allocations size(2^ x)
  * @var buddyAllocator::freeListsCount
- *			must be GET_NEEDED_FREE_LISTS_COUNT(buddyAllocator::poolSizeExponent, buddyAllocator::smallestAllocationSizeExponent)
+ *			must be GET_NEEDED_FREE_LISTS_COUNT(buddyAllocator::poolSizeExponent,
+ buddyAllocator::smallestAllocationSizeExponent)
  * @note used to verify there are enough freeLists allocated
- * @var buddyAllocator::freeLists 
- *			a list of darray that is used to keep track of the buddy tree free leafs 
+ * @var buddyAllocator::freeLists
+ *			a list of darray that is used to keep track of the buddy tree free leafs
  */
 typedef struct
 {
@@ -65,8 +66,8 @@ extern "C"
 #endif
 	/**
 	 * @brief verify buddyAllocator is empty but valid and put the start state in it
-	 * 
-	 * @param allocator 
+	 *
+	 * @param allocator
 	 * @return THROWS if any of the valued is invalid
 	 */
 	THROWS err_t initBuddyAllocator(buddyAllocator *allocator);
@@ -74,20 +75,22 @@ extern "C"
 	/**
 	 * @brief doesn't do much as it is better for the user to just free the underline address range,
 	 *			and the buddyAllocator memory is manged by the use anyway.
-	 * @note if the buddyAllocator is saved on manged address range freeing the underline range is all the user need to do
+	 * @note if the buddyAllocator is saved on manged address range freeing the underline range is all the user need to
+	 *do
 	 */
 	THROWS err_t closeBuddyAllocator(buddyAllocator *allocator);
 
 	/**
 	 * @brief return address of size in *ptr
-	 * @note the real size of the address is rounded up to the closest power of 2 with a minumum of smallestAllocationSizeExponent
+	 * @note the real size of the address is rounded up to the closest power of 2 with a minumum of
+	 * smallestAllocationSizeExponent
 	 * @return THROWS is any of the values is invalid or if there is no more memory
 	 */
 	THROWS err_t buddyAlloc(buddyAllocator *allocator, void **const ptr, size_t size);
 
 	/**
 	 * @brief free the value that is in *ptr and set it to NULL
-	 * @return THROWS is any of the values is invalid 
+	 * @return THROWS is any of the values is invalid
 	 */
 	THROWS err_t buddyFree(buddyAllocator *allocator, void **const ptr);
 #ifdef __cplusplus

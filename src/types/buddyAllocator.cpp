@@ -1,5 +1,4 @@
 #include "types/buddyAllocator.h"
-
 #include "defaultTrace.h"
 #include "err.h"
 
@@ -84,7 +83,7 @@ THROWS err_t buddyAlloc(buddyAllocator *allocator, void **const ptr, size_t size
 			i++;
 		}
 
-		QUITE_CHECK(i < allocator->freeListsCount);
+		CHECK_NOTRACE_ERRORCODE(i < allocator->freeListsCount, ENOMEM);
 
 		QUITE_RETHROW(darrayPop(allocator->freeLists[i], ptr, sizeof(void *)));
 
@@ -97,6 +96,8 @@ THROWS err_t buddyAlloc(buddyAllocator *allocator, void **const ptr, size_t size
 			QUITE_RETHROW(darrayPush(allocator->freeLists[i], &temp, sizeof(void *)));
 		}
 	}
+
+	QUITE_CHECK(*ptr != NULL);
 
 	maxNeededPoolSize = (size_t)*ptr - (size_t)allocator->memorySource.startAddr +
 						pow(2, wantedFreeListIndex + allocator->smallestAllocationSizeExponent);

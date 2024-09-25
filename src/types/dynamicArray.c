@@ -1,8 +1,8 @@
 
 #define _GNU_SOURCE
 #include "types/dynamicArray.h"
-
-#include "defaultTrace.h"
+#include "log.h"
+//#include "defaultTrace.h"
 #include "err.h"
 
 #include <string.h>
@@ -17,13 +17,13 @@ THROWS err_t darrayCreate(size_t size, size_t elementSize, const memoryAllocator
 	CHECK(elementSize > 0);
 	CHECK(allocator != NULL);
 
-	RETHROW(allocator->alloc((void **)newArray, 1, sizeof(darray), ALLOCATOR_CLEAR_MEMORY));
+	RETHROW(allocator->alloc((void **)newArray, 1, sizeof(darray), ALLOCATOR_CLEAR_MEMORY, allocator->data));
 	(*newArray)->maxSize = size;
 	(*newArray)->currentSize = 0;
 	(*newArray)->elementSize = elementSize;
 	(*newArray)->allocator = allocator;
 
-	RETHROW(allocator->alloc(&((*newArray)->data), size, elementSize, ALLOCATOR_CLEAR_MEMORY));
+	RETHROW(allocator->alloc(&((*newArray)->data), size, elementSize, ALLOCATOR_CLEAR_MEMORY, allocator->data));
 
 cleanup:
 	return err;
@@ -39,8 +39,8 @@ THROWS err_t darrayFree(darray **arr)
 
 	temp = (*arr)->allocator;
 
-	RETHROW(temp->free(&(*arr)->data));
-	RETHROW(temp->free((void **)arr));
+	RETHROW(temp->free(&(*arr)->data, temp->data));
+	RETHROW(temp->free((void **)arr, temp->data));
 
 cleanup:
 	return err;
@@ -52,7 +52,7 @@ THROWS err_t darrayResize(darray *arr, size_t newSize)
 	CHECK(arr != NULL);
 	CHECK(newSize >= arr->currentSize);
 
-	RETHROW(arr->allocator->realloc(&arr->data, newSize, arr->elementSize, 0));
+	RETHROW(arr->allocator->realloc(&arr->data, newSize, arr->elementSize, 0, arr->allocator->data));
 	arr->maxSize = newSize;
 
 cleanup:
@@ -132,20 +132,21 @@ THROWS err_t darraySwitchAllocator(darray **arr, const memoryAllocator *newAlloc
 	CHECK(arr != NULL);
 	CHECK(*arr != NULL);
 
-	RETHROW(newAllocator->alloc((void **)&arrCopy, 1, sizeof(darray), ALLOCATOR_CLEAR_MEMORY));
-	arrCopy->maxSize = (*arr)->maxSize;
-	arrCopy->currentSize = (*arr)->currentSize;
+	RETHROW(newAllocator->alloc((void **)&arrCopy, 1, sizeof(darray), ALLOCATOR_CLEAR_MEMORY,newAllocator->data));
+	RETHROW(newAllocator->alloc(&(arrCopy->data), (*arr)->maxSize, (*arr)->elementSize, ALLOCATOR_CLEAR_MEMORY, newAllocator->data));
+	
+  // if the alloctor is using this darray while copying to a diffrent allocator it might change the array data when calling alloc
+  arrCopy->maxSize = (*arr)->maxSize;
 	arrCopy->elementSize = (*arr)->elementSize;
 	arrCopy->allocator = newAllocator;
-
-	RETHROW(newAllocator->alloc(&(arrCopy->data), (*arr)->maxSize, (*arr)->elementSize, ALLOCATOR_CLEAR_MEMORY));
-
-	memcpy(arrCopy->data, (*arr)->data, (*arr)->currentSize * (*arr)->elementSize);
+	arrCopy->currentSize = (*arr)->currentSize;
+	
+  memcpy(arrCopy->data, (*arr)->data, (*arr)->currentSize * (*arr)->elementSize);
 
 	temp = (*arr)->allocator;
 
-	RETHROW(temp->free(&(*arr)->data));
-	RETHROW(temp->free((void **)arr));
+	RETHROW(temp->free(&(*arr)->data, temp->data));
+	RETHROW(temp->free((void **)arr, temp->data));
 
 cleanup:
 	*arr = arrCopy;
