@@ -26,8 +26,7 @@
  * @param poolSizeExponent uint8_t the exponent of the wanted max pool size(2^x)
  * @param smallestAllocationSizeExponent uint8_t the exponent of the smallest wanted allocations size(2^ x)
  */
-#define GET_NEEDED_FREE_LISTS_COUNT(poolSizeExponent, smallestAllocationSizeExponent)                                  \
-	(poolSizeExponent - smallestAllocationSizeExponent)
+#define GET_BUDDY_MAX_ELEMENT_COUNT(poolSizeExponent, smallestAllocationSizeExponent) (pow(2, poolSizeExponent - smallestAllocationSizeExponent))
 
 /**
  * @brief this is all the data the buddyAllocator uses for itself
@@ -41,12 +40,12 @@
  *		 the exponent of the wanted max pool size(2^x)
  * @var buddyAllocator::smallestAllocationSizeExponent
  *			the exponent of the smallest wanted allocations size(2^ x)
- * @var buddyAllocator::freeListsCount
- *			must be GET_NEEDED_FREE_LISTS_COUNT(buddyAllocator::poolSizeExponent,
+ * @var buddyAllocator::freeListSize
+ *			must be GET_BUDDY_MAX_ELEMENT_COUNT(buddyAllocator::poolSizeExponent,
  buddyAllocator::smallestAllocationSizeExponent)
- * @note used to verify there are enough freeLists allocated
- * @var buddyAllocator::freeLists
- *			a list of darray that is used to keep track of the buddy tree free leafs
+ * @note used to verify that the freeList is the right size
+ * @var buddyAllocator::freeList
+ *			a byte array that marks which buddys are free and which are Full
  */
 typedef struct
 {
@@ -56,8 +55,8 @@ typedef struct
 	uint8_t poolSizeExponent;
 	uint8_t smallestAllocationSizeExponent;
 
-	uint8_t freeListsCount;
-	darray *freeLists[];
+	ssize_t freeListSize;
+  uint8_t freeList[];
 } buddyAllocator;
 
 #ifdef __cplusplus
@@ -93,6 +92,8 @@ extern "C"
 	 * @return THROWS is any of the values is invalid
 	 */
 	THROWS err_t buddyFree(buddyAllocator *allocator, void **const ptr);
+
+  THROWS err_t buddyGetCellStartAddrFromAddrInCell(buddyAllocator *allocator, void *ptr, void **res);
 #ifdef __cplusplus
 }
 #endif
